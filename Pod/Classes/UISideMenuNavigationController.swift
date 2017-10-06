@@ -135,77 +135,87 @@ open class UISideMenuNavigationController: UINavigationController {
         
         return super.shouldPerformSegue(withIdentifier: identifier, sender: sender)
     }
-// MARK: Commented because we need to push view controller to current sidebar
-//    override open func pushViewController(_ viewController: UIViewController, animated: Bool) {
-//        guard viewControllers.count > 0 && SideMenuManager.menuPushStyle != .subMenu else {
-//            // NOTE: pushViewController is called by init(rootViewController: UIViewController)
-//            // so we must perform the normal super method in this case.
-//            super.pushViewController(viewController, animated: animated)
-//            return
-//        }
-//
-//        let tabBarController = presentingViewController as? UITabBarController
-//        guard let navigationController = (tabBarController?.selectedViewController ?? presentingViewController) as? UINavigationController else {
-//            print("SideMenu Warning: attempt to push a View Controller from \(String(describing: presentingViewController.self)) where its navigationController == nil. It must be embedded in a Navigation Controller for this to work.")
-//            return
-//        }
-//
-//        // To avoid overlapping dismiss & pop/push calls, create a transaction block where the menu
-//        // is dismissed after showing the appropriate screen
-//        CATransaction.begin()
-//        CATransaction.setCompletionBlock( { () -> Void in
-//            self.dismiss(animated: true, completion: nil)
-//        })
-//
-//        let areAnimationsEnabled = UIView.areAnimationsEnabled
-//        UIView.setAnimationsEnabled(true)
-//        UIView.animate(withDuration: SideMenuManager.menuAnimationDismissDuration, animations: { () -> Void in
-//            SideMenuTransition.hideMenuStart()
-//        })
-//        UIView.setAnimationsEnabled(areAnimationsEnabled)
-//
-//        if let lastViewController = navigationController.viewControllers.last, !SideMenuManager.menuAllowPushOfSameClassTwice && type(of: lastViewController) == type(of: viewController) {
-//            CATransaction.commit()
-//            return
-//        }
-//
-//        switch SideMenuManager.menuPushStyle {
-//        case .subMenu, .defaultBehavior: break // .subMenu handled earlier, .defaultBehavior falls through to end
-//        case .popWhenPossible:
-//            for subViewController in navigationController.viewControllers.reversed() {
-//                if type(of: subViewController) == type(of: viewController) {
-//                    navigationController.popToViewController(subViewController, animated: animated)
-//                    CATransaction.commit()
-//                    return
-//                }
-//            }
-//        case .preserve, .preserveAndHideBackButton:
-//            var viewControllers = navigationController.viewControllers
-//            let filtered = viewControllers.filter { preservedViewController in type(of: preservedViewController) == type(of: viewController) }
-//            if let preservedViewController = filtered.last {
-//                viewControllers = viewControllers.filter { subViewController in subViewController !== preservedViewController }
-//                if SideMenuManager.menuPushStyle == .preserveAndHideBackButton {
-//                    preservedViewController.navigationItem.hidesBackButton = true
-//                }
-//                viewControllers.append(preservedViewController)
-//                navigationController.setViewControllers(viewControllers, animated: animated)
-//                CATransaction.commit()
-//                return
-//            }
-//            if SideMenuManager.menuPushStyle == .preserveAndHideBackButton {
-//                viewController.navigationItem.hidesBackButton = true
-//            }
-//        case .replace:
-//            viewController.navigationItem.hidesBackButton = true
-//            navigationController.setViewControllers([viewController], animated: animated)
-//            CATransaction.commit()
-//            return
-//        }
-//
-//        navigationController.pushViewController(viewController, animated: animated)
-//        CATransaction.commit()
-//    }
+
+    
+    // MARK: Commented because we need to push view controller to current sidebar
+    open func pushViewController(_ viewController: UIViewController, promptSideBarDetail: Bool = false, animated: Bool) {
+
+        if promptSideBarDetail {
+            super.pushViewController(viewController, animated: animated)
+            return
+        }
+
+        guard viewControllers.count > 0 && SideMenuManager.menuPushStyle != .subMenu else {
+            // NOTE: pushViewController is called by init(rootViewController: UIViewController)
+            // so we must perform the normal super method in this case.
+            super.pushViewController(viewController, animated: animated)
+            return
+        }
+
+        let tabBarController = presentingViewController as? UITabBarController
+        guard let navigationController = (tabBarController?.selectedViewController ?? presentingViewController) as? UINavigationController else {
+            print("SideMenu Warning: attempt to push a View Controller from \(String(describing: presentingViewController.self)) where its navigationController == nil. It must be embedded in a Navigation Controller for this to work.")
+            return
+        }
+
+        // To avoid overlapping dismiss & pop/push calls, create a transaction block where the menu
+        // is dismissed after showing the appropriate screen
+        CATransaction.begin()
+        CATransaction.setCompletionBlock( { () -> Void in
+            self.dismiss(animated: true, completion: nil)
+        })
+
+        let areAnimationsEnabled = UIView.areAnimationsEnabled
+        UIView.setAnimationsEnabled(true)
+        UIView.animate(withDuration: SideMenuManager.menuAnimationDismissDuration, animations: { () -> Void in
+            SideMenuTransition.hideMenuStart()
+        })
+        UIView.setAnimationsEnabled(areAnimationsEnabled)
+
+        if let lastViewController = navigationController.viewControllers.last, !SideMenuManager.menuAllowPushOfSameClassTwice && type(of: lastViewController) == type(of: viewController) {
+            CATransaction.commit()
+            return
+        }
+
+        switch SideMenuManager.menuPushStyle {
+        case .subMenu, .defaultBehavior: break // .subMenu handled earlier, .defaultBehavior falls through to end
+        case .popWhenPossible:
+            for subViewController in navigationController.viewControllers.reversed() {
+                if type(of: subViewController) == type(of: viewController) {
+                    navigationController.popToViewController(subViewController, animated: animated)
+                    CATransaction.commit()
+                    return
+                }
+            }
+        case .preserve, .preserveAndHideBackButton:
+            var viewControllers = navigationController.viewControllers
+            let filtered = viewControllers.filter { preservedViewController in type(of: preservedViewController) == type(of: viewController) }
+            if let preservedViewController = filtered.last {
+                viewControllers = viewControllers.filter { subViewController in subViewController !== preservedViewController }
+                if SideMenuManager.menuPushStyle == .preserveAndHideBackButton {
+                    preservedViewController.navigationItem.hidesBackButton = true
+                }
+                viewControllers.append(preservedViewController)
+                navigationController.setViewControllers(viewControllers, animated: animated)
+                CATransaction.commit()
+                return
+            }
+            if SideMenuManager.menuPushStyle == .preserveAndHideBackButton {
+                viewController.navigationItem.hidesBackButton = true
+            }
+        case .replace:
+            viewController.navigationItem.hidesBackButton = true
+            navigationController.setViewControllers([viewController], animated: animated)
+            CATransaction.commit()
+            return
+        }
+
+        navigationController.pushViewController(viewController, animated: animated)
+        CATransaction.commit()
+    }
 
 }
+
+
 
 
